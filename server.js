@@ -49,7 +49,7 @@ fastify.post("/*", function (request, reply) {
 
 
 // サーバー起動
-fastify.listen({ port: 3000 }, (err, address) => {
+fastify.listen({ port: 443 }, (err, address) => {
   if (err) {
     fastify.log.error(err);
     process.exit(1);
