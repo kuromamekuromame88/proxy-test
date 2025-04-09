@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "fastify": "^4.21.0",
-    "ws": "^8.18.1"
+    "@fastify/websocket": "^7.0.0"
   },
   "engines": {
     "node": "16.x"
