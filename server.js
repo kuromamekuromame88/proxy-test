@@ -1,12 +1,20 @@
+const path = require("path");
 const fastify = require("fastify")({ logger: true });
 const fastifyWebsocket = require("@fastify/websocket");
+const fastifyStatic = require("@fastify/static");
+
+// 静的ファイルの配信設定 (htmlフォルダを公開)
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, "html"),
+  prefix: "/", // ルートURLでhtmlフォルダのファイルをアクセス可能にする
+});
 
 // WebSocketプラグインを登録
 fastify.register(fastifyWebsocket);
 
-// 通常のHTTPリクエスト（ブラウザアクセス用）
+// `top.html` を表示
 fastify.get("/", async (request, reply) => {
-  return { message: "This is a WebSocket + HTTP server using Fastify!" };
+  return reply.sendFile("top.html"); // htmlフォルダ内のtop.htmlを配信
 });
 
 // WebSocketエンドポイント
