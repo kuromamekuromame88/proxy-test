@@ -23,8 +23,8 @@ fastify.register(async function (fastify) {
     console.log("Client connected!");
 
     connection.socket.on("message", (message) => {
-      console.log("Received:", message.toString());
-      connection.socket.send("Server received: " + message.toString());
+      console.log("Received:", message);//toString()
+      connection.socket.send("Server received: " + message);
     });
 
     connection.socket.on("close", () => {
