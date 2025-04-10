@@ -3,7 +3,7 @@ const fastifyWebsocket = require("@fastify/websocket");
 const WebSocket = require("ws");  // 別サーバーへの接続用にwsライブラリを使用
 
 // WebSocket中継先のサーバーURL
-const targetWebSocketServerUrl = "wss://ws.postman-echo.com/raw";  // ここを中継先サーバーに変更
+const targetWebSocketServerUrl = "wss://tool-html.glitch.me";  // ここを中継先サーバーに変更
 
 // WebSocketプラグインを登録
 fastify.register(fastifyWebsocket);
@@ -43,11 +43,7 @@ fastify.get("/ws", { websocket: true }, (connection, req) => {
 });
 
 fastify.post("/*", function (request, reply) {
-  const requestedPath = request.params['*'];
-  console.log(requestedPath);
-  if(requestedPath === "test"){
-    return reply.send("aaa");
-  }
+  reply.send(request);
   return reply.send(requestedPath);
 });
 
