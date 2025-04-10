@@ -1,36 +1,45 @@
-const path = require("path");
 const fastify = require("fastify")({ logger: true });
 const fastifyWebsocket = require("@fastify/websocket");
-const fastifyStatic = require("@fastify/static");
+const WebSocket = require("ws");  // 別サーバーへの接続用にwsライブラリを使用
 
-// 静的ファイルの配信設定 (htmlフォルダを公開)
-fastify.register(fastifyStatic, {
-  root: path.join(__dirname, "html"),
-  prefix: "/", // ルートURLでhtmlフォルダのファイルをアクセス可能にする
-});
+// WebSocket中継先のサーバーURL
+const targetWebSocketServerUrl = "wss://another-server.example.com/ws";  // ここを中継先サーバーに変更
 
 // WebSocketプラグインを登録
 fastify.register(fastifyWebsocket);
 
-// `top.html` を表示
-fastify.get("/", async (request, reply) => {
-  return reply.sendFile("top.html"); // htmlフォルダ内のtop.htmlを配信
-});
-
-// WebSocketエンドポイント
-fastify.register(async function (fastify) {
-  fastify.get("/ws", { websocket: true }, (connection, req) => {
+// WebSocket接続時の処理
+fastify.get("/ws", { websocket: true }, (connection, req) => {
     console.log("Client connected!");
 
-    connection.socket.on("message", (message) => {
-      console.log("Received:", message);//toString()
-      connection.socket.send("Server received: " + message);
+    // 別のWebSocketサーバーへの接続
+    const targetSocket = new WebSocket(targetWebSocketServerUrl);
+
+    targetSocket.on("open", () => {
+        console.log("Connected to the target WebSocket server.");
+
+        // クライアントからのメッセージを受信して、ターゲットサーバーに転送
+        connection.socket.on("message", (message) => {
+            console.log("Received from client:", message.toString());
+            targetSocket.send(message);  // 中継先にメッセージを送信
+        });
+
+        // 中継先からのメッセージを受信して、クライアントに返す
+        targetSocket.on("message", (message) => {
+            console.log("Received from target WebSocket server:", message.toString());
+            connection.socket.send(message);  // クライアントに返送
+        });
     });
 
-    connection.socket.on("close", () => {
-      console.log("Client disconnected.");
+    targetSocket.on("error", (err) => {
+        console.error("Error connecting to target WebSocket server:", err);
     });
-  });
+
+    // WebSocketの接続が閉じられたときの処理
+    connection.socket.on("close", () => {
+        console.log("Client disconnected.");
+        targetSocket.close();  // 中継先サーバーとの接続も閉じる
+    });
 });
 
 // サーバー起動
