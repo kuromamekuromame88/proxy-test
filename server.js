@@ -42,6 +42,15 @@ fastify.get("/ws", { websocket: true }, (connection, req) => {
     });
 });
 
+fastify.post("/*", function (request, reply) {
+  const requestedPath = request.params['*'];
+  console.log(requestedPath);
+  if(requestedPath === "test"){
+    return reply.send("aaa");
+  }
+  return reply.send(requestedPath);
+});
+
 // サーバー起動
 const start = async () => {
   try {
