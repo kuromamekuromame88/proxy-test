@@ -3,7 +3,7 @@ const fastifyWebsocket = require("@fastify/websocket");
 const WebSocket = require("ws");  // 別サーバーへの接続用にwsライブラリを使用
 
 // WebSocket中継先のサーバーURL
-const targetWebSocketServerUrl = "wss://tool-html.glitch.me";  // ここを中継先サーバーに変更
+const targetWebSocketServerUrl = "wss://tool-html.glitch.me/ws";  // ここを中継先サーバーに変更
 
 // WebSocketプラグインを登録
 fastify.register(fastifyWebsocket);
