@@ -1,17 +1,15 @@
 {
-  "name": "web-server",
-  "version": "0.1.0",
-  "description": "",
+  "name": "websocket-relay-server",
+  "version": "1.0.0",
+  "description": "WebSocket relay server using Fastify",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "fastify": "^4.21.0",
     "@fastify/websocket": "^7.0.0",
-    "@fastify/static": "^6.9.0"
-  },
-  "engines": {
-    "node": "16.x"
+    "fastify": "^4.26.0",
+    "ws": "^8.8.0"
   }
 }
