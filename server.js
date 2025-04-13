@@ -4,6 +4,57 @@ const querystring = require('querystring');
 
 const WebSocket = require("ws");  // 別サーバーへの接続用にwsライブラリを使用
 
+const relayPort = 3000; // 中継用のサーバーのポート
+const targetServer = "ws://172.17.0.117:8081"; // 中継後のサーバーの IPv4 アドレスとポート
+
+// 中継用 WebSocket サーバーを作成
+const relayServer = new WebSocket.Server({ host: '0.0.0.0', port: relayPort });
+
+console.log(`Relay WebSocket server running on ws://0.0.0.0:${relayPort}`);
+
+relayServer.on('connection', (clientSocket, req) => {
+    console.log(`Client connected: ${req.socket.remoteAddress}`);
+
+    // 中継後の WebSocket サーバーに接続
+    const backendSocket = new WebSocket(targetServer);
+
+    backendSocket.on('open', () => {
+        console.log(`Connected to backend server: ${targetServer}`);
+
+        // クライアントからのメッセージを中継後のサーバーに送信
+        clientSocket.on('message', (message) => {
+            console.log(`Relaying message to backend: ${message.toString()}`);
+            backendSocket.send(message.toString());
+        });
+
+        // 中継後のサーバーからのレスポンスをクライアントに送信
+        backendSocket.on('message', (backendMessage) => {
+            console.log(`Received from backend: ${backendMessage.toString()}`);
+            clientSocket.send(backendMessage.toString());
+        });
+    });
+
+    backendSocket.on('error', (err) => {
+        console.error('Backend WebSocket error:', err);
+    });
+
+    // クライアントまたは中継後のサーバーが切断された場合、もう一方も切断
+    clientSocket.on('close', () => {
+        console.log('Client disconnected.');
+        backendSocket.close();
+    });
+
+    backendSocket.on('close', () => {
+        console.log('Backend server disconnected.');
+        clientSocket.close();
+    });
+
+    clientSocket.on('error', (err) => {
+        console.error('Client WebSocket error:', err);
+    });
+});
+
+/*
 // WebSocket中継先のサーバーURL
 const targetWebSocketServerUrl = "wss://tool-html.glitch.me";  // ここを中継先サーバーに変更
 
@@ -11,6 +62,7 @@ const targetWebSocketServerUrl = "wss://tool-html.glitch.me";  // ここを中�
 fastify.register(fastifyWebsocket);
 
 // WebSocket接続時の処理
+
 fastify.get("/ws", { websocket: true }, (connection, req) => {
     console.log("Client connected!");
 
@@ -43,6 +95,7 @@ fastify.get("/ws", { websocket: true }, (connection, req) => {
         targetSocket.close();  // 中継先サーバーとの接続も閉じる
     });
 });
+*/
 
 fastify.post('/', async (request, reply) => {
   let body = request.body;
