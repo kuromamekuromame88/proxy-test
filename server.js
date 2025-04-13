@@ -5,7 +5,7 @@ const querystring = require('querystring');
 const WebSocket = require("ws");  // 別サーバーへの接続用にwsライブラリを使用
 
 const relayPort = 3000; // 中継用のサーバーのポート
-const targetServer = "ws://172.17.0.117:8081"; // 中継後のサーバーの IPv4 アドレスとポート
+const targetServer = "wss://172.17.0.117:8081"; // 中継後のサーバーの IPv4 アドレスとポート
 
 // 中継用 WebSocket サーバーを作成
 const relayServer = new WebSocket.Server({ host: '0.0.0.0', port: relayPort });
