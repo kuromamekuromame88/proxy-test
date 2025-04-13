@@ -44,7 +44,7 @@ fastify.get("/ws", { websocket: true }, (connection, req) => {
 
 fastify.post("/*", function (request, reply) {
   reply.send(request);
-  return reply.send(requestedPath);
+  return reply.send(request);
 });
 
 // サーバー起動
