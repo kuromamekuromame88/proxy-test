@@ -1,20 +1,20 @@
 const fastify = require('fastify')({ logger: true });
-const fastifyWebsocket = require('@fastify/websocket');
 const WebSocket = require('ws');
 
-// 終点サーバーのURL（Glitchなど）
-const DESTINATION_WS_URL = 'wss://tool-html.glitch.me/ws'; // ← Glitch の WebSocket URL に変更
+// 終点サーバーのWebSocket URL（Glitchサーバー）
+const DESTINATION_WS_URL = 'wss://your-glitch-project.glitch.me/ws'; // 実際のURLに変更
 
-fastify.register(fastifyWebsocket);
+// WebSocket サーバーの設定
+fastify.register(require('@fastify/websocket'));
 
 // クライアントとのWebSocket接続受付
 fastify.get('/ws', { websocket: true }, (clientConn, req) => {
-  fastify.log.info('クライアントと接続しました（Render側）');
+  fastify.log.info('クライアントと接続しました（中継用サーバー）');
 
   // 終点サーバーにWebSocket接続
   const destinationSocket = new WebSocket(DESTINATION_WS_URL);
 
-  // 終点に接続完了したら、クライアントからのメッセージを中継
+  // 終点サーバーへの接続が確立したら、メッセージ転送を開始
   destinationSocket.on('open', () => {
     fastify.log.info('終点サーバーへ接続成功');
 
@@ -31,7 +31,7 @@ fastify.get('/ws', { websocket: true }, (clientConn, req) => {
     });
   });
 
-  // エラー処理
+  // 終点との接続エラー
   destinationSocket.on('error', (err) => {
     fastify.log.error('終点との接続エラー:', err);
     if (clientConn.socket && typeof clientConn.socket.close === 'function') {
@@ -60,7 +60,7 @@ fastify.get('/ws', { websocket: true }, (clientConn, req) => {
 const start = async () => {
   try {
     await fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' });
-    fastify.log.info('中継サーバー起動中...');
+    fastify.log.info('WebSocket転送サーバー起動中...');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
