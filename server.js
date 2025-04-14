@@ -1,37 +1,62 @@
+const fastify = require('fastify')({ logger: true });
+const fastifyWebsocket = require('@fastify/websocket');
 const WebSocket = require('ws');
-const http = require('http');
 
-// Renderの環境変数からポートを取得（ローカルでは 3000 を使う）
-const PORT = process.env.PORT || 3000;
+// 終点サーバーのURL（Glitchなど）
+const DESTINATION_WS_URL = 'wss://tool-html.glitch.me/ws'; // ← Glitch の WebSocket URL に変更
 
-// HTTP サーバーを作成（Renderでは必須）
-const server = http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end("WebSocket Relay Server is running.\n");
-});
+fastify.register(fastifyWebsocket);
 
-// WebSocket サーバーを HTTP サーバーにアタッチ
-const wss = new WebSocket.Server({ server });
+// クライアントとのWebSocket接続受付
+fastify.get('/ws', { websocket: true }, (clientConn, req) => {
+  fastify.log.info('クライアントと接続しました（Render側）');
 
-wss.on('connection', (ws, req) => {
-  console.log(`クライアント接続: ${req.socket.remoteAddress}`);
+  // 終点サーバーにWebSocket接続
+  const destinationSocket = new WebSocket(DESTINATION_WS_URL);
 
-  ws.on('message', (message) => {
-    console.log(`受信: ${message}`);
-    // ここで中継処理を行う（例: 中継先に転送）
-    ws.send(`Echo: ${message}`);
+  // 終点に接続完了したら、クライアントからのメッセージを中継
+  destinationSocket.on('open', () => {
+    fastify.log.info('終点サーバーへ接続成功');
+
+    // クライアント → 終点
+    clientConn.socket.on('message', (msg) => {
+      fastify.log.info('クライアント → 終点:', msg.toString());
+      destinationSocket.send(msg.toString());
+    });
+
+    // 終点 → クライアント
+    destinationSocket.on('message', (msg) => {
+      fastify.log.info('終点 → クライアント:', msg.toString());
+      clientConn.socket.send(msg.toString());
+    });
   });
 
-  ws.on('close', () => {
-    console.log("クライアント切断");
+  // エラー処理
+  destinationSocket.on('error', (err) => {
+    fastify.log.error('終点との接続エラー:', err);
+    clientConn.socket.close();
   });
 
-  ws.on('error', (err) => {
-    console.error("エラー:", err);
+  clientConn.socket.on('close', () => {
+    fastify.log.info('クライアント接続が閉じられました');
+    destinationSocket.close();
+  });
+
+  destinationSocket.on('close', () => {
+    fastify.log.info('終点接続が閉じられました');
+    clientConn.socket.close();
   });
 });
 
 // サーバー起動
-server.listen(PORT, () => {
-  console.log(`Render対応 WebSocketサーバー起動: ポート ${PORT}`);
-});
+const start = async () => {
+  try {
+    await fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' });
+    fastify.log.info('中継サーバー起動中...');
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
