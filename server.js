@@ -34,17 +34,25 @@ fastify.get('/ws', { websocket: true }, (clientConn, req) => {
   // エラー処理
   destinationSocket.on('error', (err) => {
     fastify.log.error('終点との接続エラー:', err);
-    clientConn.socket.close();
+    if (clientConn.socket && typeof clientConn.socket.close === 'function') {
+      clientConn.socket.close();
+    }
   });
 
+  // クライアント接続が閉じられたとき
   clientConn.socket.on('close', () => {
     fastify.log.info('クライアント接続が閉じられました');
-    destinationSocket.close();
+    if (destinationSocket.readyState === WebSocket.OPEN) {
+      destinationSocket.close();
+    }
   });
 
+  // 終点接続が閉じられたとき
   destinationSocket.on('close', () => {
     fastify.log.info('終点接続が閉じられました');
-    clientConn.socket.close();
+    if (clientConn.socket && typeof clientConn.socket.close === 'function') {
+      clientConn.socket.close();
+    }
   });
 });
 
