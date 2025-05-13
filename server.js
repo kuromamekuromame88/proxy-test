@@ -23,19 +23,21 @@ fastify.get('/:page?', async (request, reply) => {
 });
 
 // クライアントとのWebSocket接続受付
-fastify.get('/ws', { websocket: true }, (clientConn, req) => {
-  fastify.log.info('クライアントと接続しました');
-  // クライアントからのメッセージ受信時の処理
-  connection.socket.on('message', (message) => {
-    const text = message.toString();  // メッセージを文字列に変換
+fastify.get('/ws', { websocket: true }, (socket, request) => {
+  // socket: WebSocket 接続に関する情報（.socket プロパティにWebSocketインスタンスあり）
+  // request: 通常の HTTP リクエストオブジェクト
+
+  fastify.log.info('クライアントがWebSocket接続しました');
+
+  socket.socket.on('message', (message) => {
+    const text = message.toString();
     fastify.log.info(`クライアントからのメッセージ: ${text}`);
 
-    // 必要に応じてメッセージに応答する
-    connection.socket.send(`受信したメッセージ: ${text}`);
+    // クライアントにメッセージを送り返す（オプション）
+    socket.socket.send(`受信したメッセージ: ${text}`);
   });
 
-  // 接続終了時の処理
-  connection.socket.on('close', () => {
+  socket.socket.on('close', () => {
     fastify.log.info('クライアントとのWebSocket接続が切断されました');
   });
 });
