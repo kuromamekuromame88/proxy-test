@@ -1,0 +1,129 @@
+<html>
+  <meta charset="utf-8">
+  <body>
+    <style>
+      /* ボタンの基本スタイル */
+    button {
+      padding: 5px 15px;
+      font-size: 16px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.2s;
+      margin-bottom: 10px; /* ボタン同士の間隔を10pxに設定 */
+    }
+
+    /* ボタンの色 */
+    button{
+      background-color: #000000;
+      color: #ffffff;
+    }
+
+    /* ホバー時の効果 */
+    button:hover {
+      transform: scale(1.1);
+    }
+    
+    button:hover {
+      background-color: #0f0f0f;
+    }
+      
+    .sf {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+            background-color: #f0f0f0;
+            color: white;
+            text-align: center;
+            padding: 5px;
+    }
+    </style>
+    <title>a</title>
+    <h1 style="text-align: center;background:#000000; color:#ffffff">
+      a
+    </h1>
+    <details id="setting-menu" style="text-align:center; width:200px;">
+      <summary>ルームの設定</summary>
+      <div id="menu">
+        ルーム:<input id="room-number">
+        パスワード:<input id="pwd">
+      </div>
+    </details>
+    <div class="sf">
+      <p style="text-align:center;">
+        <input id="content-text" style="width:500px"><button id="submit" onclick="send()">送信</button>
+      </p>
+    </div>
+    <script>
+      
+      var socket = new WebSocket('wss://proxy-test-1nhk.onrender.com/ws'); // サーバーのURL
+      var connect = false;
+
+      // 接続成功時のイベント
+      socket.addEventListener('open', (event) => {
+        console.log('WebSocketに接続しました');
+        socket.send('正常に接続できました。'); // サーバーにメッセージを送信
+        connect = true;
+      });
+
+      // メッセージ受信時のイベント
+      socket.addEventListener('message', (event) => {
+        console.log('サーバーからのメッセージ:', event.data);
+      });
+
+      // 接続エラー時のイベント
+      socket.addEventListener('error', (event) => {
+        console.error('WebSocketエラー:', event);
+      });
+
+      // 接続が閉じられた時のイベント
+      socket.addEventListener('close', (event) => {
+        console.log('WebSocketが閉じられました');
+        connect = false;
+      });
+      
+      var user, pass;
+      if (navigator.cookieEnabled){  // cookieが使えるか確認
+        if(document.cookie == ""){
+          alert("ユーザーの登録を行います(cookieを使用します)");
+          user = "user="+ prompt("ユーザー名を入力");
+          document.cookie = "user=; max-age=10000000000000000";
+          document.cookie = user;
+          pass = "pass="+ prompt("パスワードを登録:");
+          document.cookie = "pass=; max-age=10000000000000000";
+          document.cookie = pass;
+          console.log("cookieを保存しました！");
+        }
+      }
+      
+      alert("ユーザー名は "+document.cookie.substring(5, document.cookie.length)+" として登録されています");
+      
+      function send(){
+        if(connect){
+          var stex = document.getElementById("content-text").value;
+          var j = {
+            "user": user,
+            "message": stex
+          };
+          //socket.send(JSON.parse(j));
+          socket.send(j);
+          document.getElementById("content-text").value = " ";
+          }else{
+            var socket = new WebSocket('wss://proxy-test-1nhk.onrender.com/ws'); // サーバーのURL
+            connect = false;
+
+            // 接続成功時のイベント
+            socket.addEventListener('open', (event) => {
+              console.log('WebSocketに接続しました');
+              socket.send('正常に接続できました。'); // サーバーにメッセージを送信
+              connect = true;
+            });
+            
+          }
+      }
+    </script>
+  </body>
+</html>
