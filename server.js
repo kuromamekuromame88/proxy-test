@@ -7,6 +7,19 @@ const DESTINATION_WS_URL = 'wss://your-glitch-project.glitch.me/ws'; // 実際�
 // WebSocket サーバーの設定
 fastify.register(require('@fastify/websocket'));
 
+fastify.get('/:page?', async (request, reply) => {
+  const page = request.params.page;
+  const fileName = page ? `${page}.html` : 'top.html'; // デフォルトは top.html
+  const filePath = path.join(htmlFolderPath, fileName);
+
+  try {
+    const html = await fs.readFile(filePath, 'utf8');
+    reply.type('text/html; charset=utf-8').send(html);
+  } catch (err) {
+    reply.code(404).type('text/html; charset=utf-8').send('<h1>404 Not Found</h1>');
+  }
+});
+
 // クライアントとのWebSocket接続受付
 fastify.get('/ws', { websocket: true }, (clientConn, req) => {
   fastify.log.info('クライアントと接続しました（中継用サーバー）');
