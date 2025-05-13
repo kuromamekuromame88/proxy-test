@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs').promises;
+
 const fastify = require('fastify')({ logger: true });
 const WebSocket = require('ws');
 
