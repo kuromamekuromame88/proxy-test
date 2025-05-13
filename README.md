@@ -1,2 +1,2 @@
 # proxy-test
-proxyのテスト
+websocketによるチャットサーバーのテスト
