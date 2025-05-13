@@ -10,6 +10,9 @@ const DESTINATION_WS_URL = 'wss://your-glitch-project.glitch.me/ws'; // 実際�
 // WebSocket サーバーの設定
 fastify.register(require('@fastify/websocket'));
 
+// HTMLフォルダのパス
+const htmlFolderPath = path.join(__dirname, 'html');
+
 fastify.get('/:page?', async (request, reply) => {
   const page = request.params.page;
   const fileName = page ? `${page}.html` : 'top.html'; // デフォルトは top.html
