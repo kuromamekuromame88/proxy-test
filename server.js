@@ -24,14 +24,27 @@ fastify.get('/:page?', async (request, reply) => {
 
 // クライアントとのWebSocket接続受付
 fastify.get('/ws', { websocket: true }, (clientConn, req) => {
-  fastify.log.info('クライアントと接続しました（中継用サーバー）');
+  fastify.log.info('クライアントと接続しました');
+  // クライアントからのメッセージ受信時の処理
+  connection.socket.on('message', (message) => {
+    const text = message.toString();  // メッセージを文字列に変換
+    fastify.log.info(`クライアントからのメッセージ: ${text}`);
+
+    // 必要に応じてメッセージに応答する
+    connection.socket.send(`受信したメッセージ: ${text}`);
+  });
+
+  // 接続終了時の処理
+  connection.socket.on('close', () => {
+    fastify.log.info('クライアントとのWebSocket接続が切断されました');
+  });
 });
 
 // サーバー起動
 const start = async () => {
   try {
     await fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' });
-    fastify.log.info('WebSocket転送サーバー起動中...');
+    fastify.log.info('WebSocketチャットサーバー起動中...');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
